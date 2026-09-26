@@ -1,0 +1,126 @@
+:root {
+  --color-moss: #2E4036;
+  --color-clay: #CC5833;
+  --color-clay-hover: #b54927;
+  --color-cream: #F2F0E9;
+  --color-obsidian: #0D1612;
+  --color-obsidian-dark: #080E0B;
+}
+
+/* Custom Design System Tokens */
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--color-obsidian);
+  color: var(--color-cream);
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+}
+
+.font-serif {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
+.font-mono {
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* Colors */
+.bg-obsidian { background-color: var(--color-obsidian); }
+.bg-obsidian-dark { background-color: var(--color-obsidian-dark); }
+.bg-moss { background-color: var(--color-moss); }
+.bg-clay { background-color: var(--color-clay); }
+.bg-clay-hover { background-color: var(--color-clay-hover); }
+.bg-cream { background-color: var(--color-cream); }
+
+.text-obsidian { color: var(--color-obsidian); }
+.text-moss { color: var(--color-moss); }
+.text-clay { color: var(--color-clay); }
+.text-cream { color: var(--color-cream); }
+
+.border-moss { border-color: var(--color-moss); }
+.border-clay { border-color: var(--color-clay); }
+.border-cream { border-color: var(--color-cream); }
+
+/* Radial Vignette */
+.bg-radial-vignette {
+  background: radial-gradient(circle at center, transparent 0%, rgba(13, 22, 18, 0.85) 100%);
+}
+
+/* Magnetic Button Hover Effect */
+.magnetic-btn {
+  transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-color 0.2s ease, box-shadow 0.25s ease;
+  will-change: transform;
+}
+
+.magnetic-btn:hover {
+  transform: scale(1.03) translateY(-1px);
+}
+
+.magnetic-btn:active {
+  transform: scale(0.98) translateY(0);
+}
+
+/* Clickable Legal Terms */
+.legal-term {
+  color: #E69F37;
+  border-bottom: 1.5px dashed rgba(230, 159, 55, 0.6);
+  cursor: pointer;
+  padding: 0 2px;
+  border-radius: 3px;
+  transition: all 0.2s ease;
+}
+
+.legal-term:hover {
+  background-color: rgba(230, 159, 55, 0.15);
+  color: #ffffff;
+  border-bottom-color: #E69F37;
+}
+
+/* Shuffler Overlapping Cards Stack Animation */
+.shuffler-card {
+  position: absolute;
+  width: 90%;
+  border-radius: 1.5rem;
+  padding: 1.25rem;
+  background: rgba(46, 64, 54, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(242, 240, 233, 0.15);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.shuffler-card[data-pos="0"] {
+  transform: translateY(0) scale(1);
+  z-index: 30;
+  opacity: 1;
+}
+
+.shuffler-card[data-pos="1"] {
+  transform: translateY(-16px) scale(0.94);
+  z-index: 20;
+  opacity: 0.75;
+}
+
+.shuffler-card[data-pos="2"] {
+  transform: translateY(-32px) scale(0.88);
+  z-index: 10;
+  opacity: 0.4;
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-obsidian);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(242, 240, 233, 0.2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-clay);
+}

@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LexiGuard — Cinematic Multilingual Legal Document Dissection Engine</title>
+    <meta name="description" content="Transform complex legal documents, rental agreements, and loan contracts into clear, actionable summaries, risk radars, and checklists in multiple languages.">
+    
+    <!-- Google Fonts (Preset A: Organic Tech - Plus Jakarta Sans, Outfit, Cormorant Garamond, IBM Plex Mono) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500;1,600;1,700&family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        moss: '#2E4036',
+                        clay: {
+                            DEFAULT: '#CC5833',
+                            hover: '#b54927',
+                        },
+                        cream: '#F2F0E9',
+                        obsidian: {
+                            DEFAULT: '#0D1612',
+                            dark: '#080E0B',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        heading: ['"Outfit"', '"Plus Jakarta Sans"', 'sans-serif'],
+                        serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+                        mono: ['"IBM Plex Mono"', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- GSAP & ScrollTrigger -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    
+    <!-- jsPDF for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-obsidian text-cream font-sans antialiased selection:bg-clay selection:text-white relative min-h-screen overflow-x-hidden">
+
+    <!-- Global SVG Noise Texture Overlay (0.05 opacity) -->
+    <div class="fixed inset-0 pointer-events-none z-50 opacity-[0.05] mix-blend-overlay">
+        <svg class="w-full h-full">
+            <filter id="noiseFilter">
+                <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch"/>
+            </filter>
+            <rect width="100%" height="100%" filter="url(#noiseFilter)"/>
+        </svg>
+    </div>
+
+    <!-- A. NAVBAR — "The Floating Island" -->
+    <header class="fixed top-6 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-6xl transition-all duration-300">
+        <nav id="navbar-island" class="bg-moss/80 backdrop-blur-xl border border-cream/10 rounded-full px-6 py-3.5 flex items-center justify-between shadow-2xl transition-all duration-300">
+            <!-- Brand Logo -->
+            <a href="#" class="flex items-center gap-3 group">
+                <div class="w-9 h-9 rounded-full bg-clay/20 border border-clay/40 flex items-center justify-center text-clay transition-transform duration-300 group-hover:scale-110">
+                    <i data-lucide="shield-alert" class="w-5 h-5"></i>
+                </div>
+                <span class="font-extrabold text-xl tracking-tight text-cream flex items-center gap-1.5">
+                    Lexi<span class="text-clay font-serif italic text-2xl">Guard</span>
+                </span>
+            </a>
+
+            <!-- Nav Links -->
+            <div class="hidden md:flex items-center gap-6 text-sm font-medium text-cream/70">
+                <a href="#analyzer" class="hover:text-cream transition-colors">Dissect</a>
+                <a href="#features" class="hover:text-cream transition-colors">Artifacts</a>
+                <a href="#manifesto" class="hover:text-cream transition-colors">Manifesto</a>
+                <a href="#protocol" class="hover:text-cream transition-colors">Protocol</a>
+                <a href="#deep-dive" class="hover:text-cream transition-colors">Clause Audit</a>
+                <a href="#vault" class="hover:text-cream transition-colors">Vault</a>
+            </div>
+
+            <!-- Header Controls & Language Picker -->
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    <select id="language-selector" class="bg-obsidian/90 text-cream text-xs font-mono border border-cream/15 rounded-full px-3 py-1.5 focus:outline-none focus:border-clay transition-all appearance-none pr-8 cursor-pointer shadow-inner">
+                        <option value="English">EN • English</option>
+                        <option value="Hinglish">HI-EN • Hinglish</option>
+                        <option value="Hindi">HI • हिन्दी</option>
+                        <option value="Telugu">TE • తెలుగు</option>
+                        <option value="Tamil">TA • தமிழ்</option>
+                        <option value="Gujarati">GU • ગુજરાતી</option>
+                    </select>
+                    <i data-lucide="globe" class="w-3.5 h-3.5 text-cream/50 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                </div>
+
+                <a href="#analyzer" class="magnetic-btn overflow-hidden relative px-5 py-2 rounded-full bg-clay hover:bg-clay-hover text-white text-xs font-bold tracking-wide shadow-lg shadow-clay/20 transition-all flex items-center gap-1.5">
+                    <span class="relative z-10">Dissect Your Document</span>
+                    <i data-lucide="arrow-up-right" class="w-3.5 h-3.5 relative z-10"></i>
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- B. HERO SECTION — "The Opening Shot" -->
+    <section id="analyzer" class="relative min-h-[100dvh] pt-36 pb-20 px-4 md:px-8 flex flex-col justify-between overflow-hidden">
+        <!-- Hero Background Image & Gradient Overlay -->
+        <div class="absolute inset-0 z-0 pointer-events-none">
+            <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=2000" alt="Dark organic laboratory backdrop" class="w-full h-full object-cover opacity-25 filter contrast-125 saturate-50">
+            <div class="absolute inset-0 bg-gradient-to-t from-obsidian via-obsidian/85 to-transparent"></div>
+            <div class="absolute inset-0 bg-radial-vignette opacity-80"></div>
+        </div>
+
+        <!-- Main Hero Header Container -->
+        <div class="relative z-10 max-w-6xl mx-auto w-full">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cream/5 border border-cream/10 text-xs font-mono text-clay mb-6 hero-stagger">
+                <span class="w-2 h-2 rounded-full bg-clay animate-pulse"></span>
+                CLINICAL BOUTIQUE V2.4 • MULTILINGUAL LEGAL AUDITING ENGINE
+            </div>
+
+            <!-- Preset A Hero Line Pattern: [Concept Noun] is the / [Power Word]. -->
+            <h1 class="text-4xl md:text-7xl lg:text-8xl font-extrabold tracking-tight text-cream max-w-5xl leading-[1.05] mb-6 hero-stagger">
+                Legal Intelligence meets <br>
+                <span class="font-serif italic font-normal text-clay text-5xl md:text-8xl lg:text-9xl block mt-1">
+                    Uncompromised Clarity.
+                </span>
+            </h1>
+
+            <p class="text-lg md:text-xl text-cream/70 max-w-2xl font-light leading-relaxed mb-10 hero-stagger">
+                Audit rental agreements, loan contracts, and terms of service. Detect gotcha clauses, score fairness, and receive structured negotiation checklists in 6 Indian languages.
+            </p>
+
+            <!-- Cinematic Upload Zone Card (Full Width) -->
+            <div class="hero-stagger bg-moss/70 backdrop-blur-2xl border border-cream/15 rounded-[2.5rem] p-8 md:p-10 shadow-2xl w-full max-w-full relative overflow-hidden">
+                <div class="absolute -right-20 -bottom-20 w-80 h-80 bg-clay/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div id="drop-zone" class="border-2 border-dashed border-cream/20 hover:border-clay/60 rounded-[2rem] p-8 text-center transition-all duration-300 bg-obsidian/50 hover:bg-obsidian/70 relative w-full">
+                    <!-- Clickable File Picker Area -->
+                    <div class="relative cursor-pointer py-6 group w-full">
+                        <input type="file" id="doc-uploader" accept=".pdf,.docx,.doc,.png,.jpg,.jpeg" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10">
+                        
+                        <div class="w-16 h-16 mx-auto rounded-2xl bg-cream/5 border border-cream/10 flex items-center justify-center text-clay mb-4 transition-transform duration-300 group-hover:scale-110">
+                            <i data-lucide="file-up" class="w-8 h-8"></i>
+                        </div>
+
+                        <h3 class="text-2xl font-bold text-cream mb-2" id="upload-headline">Drop your legal agreement or click to browse</h3>
+                        <p class="text-sm text-cream/50 font-mono mb-4">Supports PDF, DOCX, PNG, JPG (Scanned & Digital Contracts)</p>
+
+                        <div id="selected-file-info" class="hidden inline-flex items-center gap-2 px-4 py-2 bg-clay/20 border border-clay/40 rounded-full text-xs font-mono text-cream mb-4">
+                            <i data-lucide="file-text" class="w-4 h-4 text-clay"></i>
+                            <span id="file-name-display">document.pdf</span>
+                        </div>
+                    </div>
+
+                    <!-- Action Controls (Full Width Spanning) -->
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-3xl mx-auto pt-4 relative z-30 pointer-events-auto w-full">
+                        <input type="text" id="tags-input" placeholder="Add tags (e.g. rental, bangalore, 2026)" class="w-full sm:flex-1 bg-obsidian/90 border border-cream/15 text-cream text-sm font-mono rounded-full px-5 py-3 focus:outline-none focus:border-clay transition-all placeholder:text-cream/30 shadow-inner">
+                        
+                        <button onclick="handleAnalyze()" id="analyze-btn" type="button" class="magnetic-btn w-full sm:w-auto px-8 py-3 rounded-full bg-clay hover:bg-clay-hover text-white text-sm font-bold tracking-wide shadow-xl shadow-clay/20 transition-all flex items-center justify-center gap-2">
+                            <span>Dissect Your Document</span>
+                            <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Loader Overlay -->
+                <div id="loader" class="hidden absolute inset-0 bg-obsidian/95 backdrop-blur-xl z-40 flex flex-col items-center justify-center p-6 text-center">
+                    <div class="w-16 h-16 rounded-full border-4 border-clay/20 border-t-clay animate-spin mb-4"></div>
+                    <h4 class="text-lg font-bold text-cream mb-1">Dissecting Document Parameters...</h4>
+                    <p id="loader-subtext" class="text-xs font-mono text-cream/60">Running risk radar, extracting missing protections & generating scores...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hero Footer Status -->
+        <div class="relative z-10 max-w-6xl mx-auto w-full pt-8 flex items-center justify-between text-xs font-mono text-cream/40">
+            <span class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                GEMINI 1.5 FLASH ACTIVE • ZERO LATENCY PIPELINE
+            </span>
+            <div class="flex items-center gap-2 animate-bounce">
+                <span>SCROLL FOR ARTIFACTS</span>
+                <i data-lucide="chevron-down" class="w-4 h-4"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- LIVE RESULTS DASHBOARD SECTION -->
+    <section id="results" class="hidden py-20 px-4 md:px-8 max-w-6xl mx-auto relative z-20">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-10 pb-6 border-b border-cream/10">
+            <div>
+                <span class="text-xs font-mono text-clay tracking-widest uppercase block mb-1">Dissection Report Output</span>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-cream">Analysis Artifacts</h2>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3">
+                <button onclick="handleExport()" class="magnetic-btn px-4 py-2 rounded-full bg-cream/10 hover:bg-cream/20 text-cream text-xs font-mono border border-cream/15 transition-all flex items-center gap-2">
+                    <i data-lucide="download" class="w-4 h-4 text-clay"></i>
+                    <span>Export PDF</span>
+                </button>
+                <button onclick="handleShare()" class="magnetic-btn px-4 py-2 rounded-full bg-clay/20 hover:bg-clay/30 text-cream text-xs font-mono border border-clay/40 transition-all flex items-center gap-2">
+                    <i data-lucide="share-2" class="w-4 h-4 text-clay"></i>
+                    <span>Share Link</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Key Info & Scores Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <!-- Score Card -->
+            <div class="bg-moss/50 backdrop-blur-xl border border-cream/10 rounded-[2.2rem] p-6 shadow-xl flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-mono text-cream/50 uppercase">Readability & Fairness Score</span>
+                        <i data-lucide="scale" class="w-5 h-5 text-clay"></i>
+                    </div>
+                    <div id="fairness-score-display" class="text-5xl font-extrabold text-cream mb-2 font-mono">--/10</div>
+                    <p id="fairness-justification" class="text-xs text-cream/70 font-light leading-relaxed">Score justification will load here upon processing.</p>
+                </div>
+                <div class="mt-6 pt-4 border-t border-cream/10 flex items-center justify-between text-xs font-mono text-cream/50">
+                    <span>Jurisdiction:</span>
+                    <span id="detected-jurisdiction" class="text-clay font-bold">Unknown</span>
+                </div>
+            </div>
+
+            <!-- Document Metadata -->
+            <div class="md:col-span-2 bg-moss/50 backdrop-blur-xl border border-cream/10 rounded-[2.2rem] p-6 shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-xs font-mono text-cream/50 uppercase">Extracted Attributes</span>
+                    <i data-lucide="layers" class="w-5 h-5 text-clay"></i>
+                </div>
+                <div id="key-info-card" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+            </div>
+        </div>
+
+        <!-- Main Summary & Risk Radar Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            <!-- Summary & Action Plan -->
+            <div class="bg-moss/40 backdrop-blur-xl border border-cream/10 rounded-[2.2rem] p-6 md:p-8 shadow-xl">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                        <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-cream">Summary & Action Checklist</h3>
+                        <p class="text-xs font-mono text-cream/50">Simplified takeaway & immediate next steps</p>
+                    </div>
+                </div>
+                <div id="summary-text" class="prose prose-invert max-w-none text-cream/80 text-sm font-light leading-relaxed whitespace-pre-line"></div>
+            </div>
+
+            <!-- Risk Radar -->
+            <div class="bg-moss/40 backdrop-blur-xl border border-clay/30 rounded-[2.2rem] p-6 md:p-8 shadow-xl relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 w-40 h-40 bg-clay/10 rounded-full blur-2xl pointer-events-none"></div>
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 rounded-xl bg-clay/20 border border-clay/40 flex items-center justify-center text-clay">
+                        <i data-lucide="radar" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-cream">Risk Radar & Flagged Gotchas</h3>
+                        <p class="text-xs font-mono text-clay">High risk & ambiguous terms identified</p>
+                    </div>
+                </div>
+                <div id="risk-text" class="prose prose-invert max-w-none text-cream/80 text-sm font-light leading-relaxed whitespace-pre-line"></div>
+            </div>
+        </div>
+
+        <!-- Secondary Insights Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Questions to Ask -->
+            <div class="bg-moss/30 backdrop-blur-xl border border-cream/10 rounded-[2rem] p-6">
+                <div class="flex items-center gap-2 mb-4 text-clay">
+                    <i data-lucide="help-circle" class="w-4 h-4"></i>
+                    <h4 class="text-sm font-bold uppercase tracking-wider text-cream font-mono">Negotiation Prompts</h4>
+                </div>
+                <div id="questions-text" class="text-xs text-cream/70 leading-relaxed whitespace-pre-line"></div>
+            </div>
+
+            <!-- Missing Clauses -->
+            <div class="bg-moss/30 backdrop-blur-xl border border-cream/10 rounded-[2rem] p-6">
+                <div class="flex items-center gap-2 mb-4 text-amber-400">
+                    <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                    <h4 class="text-sm font-bold uppercase tracking-wider text-cream font-mono">Omitted Protections</h4>
+                </div>
+                <div id="missing-clauses-text" class="text-xs text-cream/70 leading-relaxed whitespace-pre-line"></div>
+            </div>
+
+            <!-- Stamp Duty / Guidance -->
+            <div class="bg-moss/30 backdrop-blur-xl border border-cream/10 rounded-[2rem] p-6">
+                <div class="flex items-center gap-2 mb-4 text-emerald-400">
+                    <i data-lucide="stamp" class="w-4 h-4"></i>
+                    <h4 class="text-sm font-bold uppercase tracking-wider text-cream font-mono">Stamp Duty & Formalities</h4>
+                </div>
+                <div id="stamp-duty-text" class="text-xs text-cream/70 leading-relaxed whitespace-pre-line"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- C. FEATURES — "Interactive Functional Artifacts" -->
+    <section id="features" class="py-24 px-4 md:px-8 max-w-6xl mx-auto relative z-20">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <span class="text-xs font-mono text-clay tracking-widest uppercase block mb-2">Interactive Software Micro-UIs</span>
+            <h2 class="text-3xl md:text-5xl font-extrabold text-cream">
+                Engineered for <span class="font-serif italic font-normal text-clay">Legal Precision.</span>
+            </h2>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Card 1 — Diagnostic Shuffler -->
+            <div class="bg-moss/40 border border-cream/10 rounded-[2.2rem] p-6 flex flex-col justify-between h-[440px] relative overflow-hidden shadow-xl">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-mono text-clay uppercase">Card 01 • Shuffler</span>
+                        <div class="w-2 h-2 rounded-full bg-clay animate-pulse"></div>
+                    </div>
+                    <h3 class="text-xl font-bold text-cream mb-1.5">Diagnostic Shuffler</h3>
+                    <p class="text-xs text-cream/60 font-light">3 overlapping cards cycling legal risk vectors with spring bounce animation.</p>
+                </div>
+
+                <!-- Overlapping Cards Stack Container -->
+                <div id="shuffler-container" class="relative h-48 w-full my-auto flex items-center justify-center"></div>
+
+                <div class="text-[10px] font-mono text-cream/40 text-center">CYCLES AUTOMATICALLY EVERY 3S</div>
+            </div>
+
+            <!-- Card 2 — Telemetry Typewriter -->
+            <div class="bg-moss/40 border border-cream/10 rounded-[2.2rem] p-6 flex flex-col justify-between h-[440px] relative overflow-hidden shadow-xl">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-mono text-emerald-400 uppercase">Card 02 • Live Feed</span>
+                        <span class="flex items-center gap-1.5 text-[10px] font-mono text-cream/50">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                            TELEMETRY
+                        </span>
+                    </div>
+                    <h3 class="text-xl font-bold text-cream mb-1.5">Telemetry Feed</h3>
+                    <p class="text-xs text-cream/60 font-light">Monospace real-time AI parsing stream character-by-character output.</p>
+                </div>
+
+                <!-- Typewriter Monospace Display -->
+                <div class="bg-obsidian/90 border border-cream/10 rounded-2xl p-4 font-mono text-xs text-cream/80 h-44 overflow-hidden relative shadow-inner">
+                    <div class="text-[10px] text-cream/30 mb-2 border-b border-cream/10 pb-1 flex justify-between">
+                        <span>SYS.PARSE.LOG</span>
+                        <span>LATENCY 12ms</span>
+                    </div>
+                    <div id="typewriter-content" class="leading-relaxed text-emerald-300/90 whitespace-pre-line"></div>
+                    <span class="inline-block w-2 h-4 bg-clay animate-pulse ml-0.5 align-middle"></span>
+                </div>
+
+                <div class="text-[10px] font-mono text-cream/40 text-center">AI STREAM PARSER ACTIVE</div>
+            </div>
+
+            <!-- Card 3 — Cursor Protocol Scheduler -->
+            <div class="bg-moss/40 border border-cream/10 rounded-[2.2rem] p-6 flex flex-col justify-between h-[440px] relative overflow-hidden shadow-xl">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-mono text-clay uppercase">Card 03 • Protocol</span>
+                        <i data-lucide="calendar" class="w-4 h-4 text-clay"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-cream mb-1.5">Protocol Scheduler</h3>
+                    <p class="text-xs text-cream/60 font-light">Interactive weekly grid with animated cell selection & saved audit state.</p>
+                </div>
+
+                <!-- Interactive Scheduler Grid -->
+                <div class="bg-obsidian/75 border border-cream/10 rounded-2xl p-4 my-auto relative">
+                    <div class="text-xs font-mono text-cream/60 mb-3 text-center">SELECT AUDIT CYCLE DAY</div>
+                    <div id="scheduler-grid" class="grid grid-cols-7 gap-1.5 mb-4">
+                        <button onclick="selectSchedulerDay('S', this)" class="day-cell p-2.5 rounded-xl bg-cream/5 border border-cream/10 text-center font-mono text-xs text-cream hover:border-clay transition-all">S</button>
+                        <button onclick="selectSchedulerDay('M', this)" class="day-cell p-2.5 rounded-xl bg-cream/5 border border-cream/10 text-center font-mono text-xs text-cream hover:border-clay transition-all">M</button>
+                        <button onclick="selectSchedulerDay('T', this)" class="day-cell p-2.5 rounded-xl bg-clay text-white text-center font-mono text-xs font-bold border border-clay shadow-lg transition-all">T</button>
+                        <button onclick="selectSchedulerDay('W', this)" class="day-cell p-2.5 rounded-xl bg-cream/5 border border-cream/10 text-center font-mono text-xs text-cream hover:border-clay transition-all">W</button>
+                        <button onclick="selectSchedulerDay('T2', this)" class="day-cell p-2.5 rounded-xl bg-cream/5 border border-cream/10 text-center font-mono text-xs text-cream hover:border-clay transition-all">T</button>
+                        <button onclick="selectSchedulerDay('F', this)" class="day-cell p-2.5 rounded-xl bg-cream/5 border border-cream/10 text-center font-mono text-xs text-cream hover:border-clay transition-all">F</button>
+                        <button onclick="selectSchedulerDay('S2', this)" class="day-cell p-2.5 rounded-xl bg-cream/5 border border-cream/10 text-center font-mono text-xs text-cream hover:border-clay transition-all">S</button>
+                    </div>
+                    <div class="flex items-center justify-between text-[11px] font-mono text-cream/70 bg-moss/60 px-3 py-2 rounded-xl border border-cream/10">
+                        <span>Active Protocol: <strong id="scheduler-selected-day" class="text-clay">Tuesday Audit</strong></span>
+                        <span class="text-emerald-400 font-bold">SAVED</span>
+                    </div>
+                </div>
+
+                <div class="text-[10px] font-mono text-cream/40 text-center">AUTONOMOUS AUDIT SCHEDULER</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- D. PHILOSOPHY — "The Manifesto" -->
+    <section id="manifesto" class="py-28 bg-obsidian-dark border-y border-cream/10 relative overflow-hidden">
+        <div class="absolute inset-0 opacity-20 pointer-events-none">
+            <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=2000" alt="Architectural shadow backdrop" class="w-full h-full object-cover filter contrast-150">
+        </div>
+
+        <div class="max-w-5xl mx-auto px-6 relative z-10 text-center">
+            <span class="text-xs font-mono text-clay uppercase tracking-widest block mb-4">The LexiGuard Manifesto</span>
+            
+            <p class="text-lg md:text-2xl text-cream/60 font-light mb-8 max-w-3xl mx-auto leading-relaxed">
+                Most legal platforms focus on: <span class="text-cream underline decoration-cream/30">unreadable 50-page PDFs and dense legal jargon.</span>
+            </p>
+
+            <h2 class="text-3xl md:text-6xl font-extrabold text-cream leading-tight max-w-4xl mx-auto">
+                We focus on: <br>
+                <span class="font-serif italic font-normal text-clay text-4xl md:text-7xl">
+                    instant risk transparency, actionable clarity & multi-lingual justice.
+                </span>
+            </h2>
+        </div>
+    </section>
+
+    <!-- E. PROTOCOL — "Sticky Stacking Archive" -->
+    <section id="protocol" class="py-24 px-4 md:px-8 max-w-5xl mx-auto relative z-20">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <span class="text-xs font-mono text-clay tracking-widest uppercase block mb-2">System Methodology</span>
+            <h2 class="text-3xl md:text-5xl font-extrabold text-cream">
+                The Dissection <span class="font-serif italic font-normal text-clay">Protocol.</span>
+            </h2>
+        </div>
+
+        <div class="space-y-12">
+            <!-- Step 1 Card with Rotating Canvas Motif -->
+            <div class="protocol-card bg-moss/50 border border-cream/15 rounded-[2.5rem] p-8 md:p-12 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8">
+                <div class="max-w-md">
+                    <span class="text-xs font-mono text-clay font-bold block mb-2">STEP 01 // PARSER</span>
+                    <h3 class="text-2xl md:text-3xl font-bold text-cream mb-3">Structure Ingestion & OCR</h3>
+                    <p class="text-sm text-cream/70 font-light leading-relaxed">
+                        High-resolution text extraction from PDF documents, Word contracts, or mobile photo scans via pdfplumber and OCR parsing.
+                    </p>
+                </div>
+                <div class="w-48 h-48 rounded-3xl bg-obsidian/80 border border-cream/10 flex items-center justify-center relative overflow-hidden shadow-inner">
+                    <canvas id="motif-canvas-1" width="180" height="180"></canvas>
+                </div>
+            </div>
+
+            <!-- Step 2 Card with Scanning Laser Grid Motif -->
+            <div class="protocol-card bg-moss/50 border border-cream/15 rounded-[2.5rem] p-8 md:p-12 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8">
+                <div class="max-w-md">
+                    <span class="text-xs font-mono text-clay font-bold block mb-2">STEP 02 // AUDIT</span>
+                    <h3 class="text-2xl md:text-3xl font-bold text-cream mb-3">Multi-Agent Risk Radar</h3>
+                    <p class="text-sm text-cream/70 font-light leading-relaxed">
+                        Gemini AI identifies unilateral liabilities, hidden auto-renewals, ambiguous notice windows, and missing statutory protections.
+                    </p>
+                </div>
+                <div class="w-48 h-48 rounded-3xl bg-obsidian/80 border border-cream/10 flex items-center justify-center relative overflow-hidden shadow-inner">
+                    <canvas id="motif-canvas-2" width="180" height="180"></canvas>
+                </div>
+            </div>
+
+            <!-- Step 3 Card with Pulsing Waveform Motif -->
+            <div class="protocol-card bg-moss/50 border border-cream/15 rounded-[2.5rem] p-8 md:p-12 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8">
+                <div class="max-w-md">
+                    <span class="text-xs font-mono text-clay font-bold block mb-2">STEP 03 // SYNTHESIS</span>
+                    <h3 class="text-2xl md:text-3xl font-bold text-cream mb-3">Actionable Synthesis</h3>
+                    <p class="text-sm text-cream/70 font-light leading-relaxed">
+                        Generates tenant/borrower negotiation prompts, stamp duty requirements, and translates takeaways into 6 Indian languages.
+                    </p>
+                </div>
+                <div class="w-48 h-48 rounded-3xl bg-obsidian/80 border border-cream/10 flex items-center justify-center relative overflow-hidden shadow-inner">
+                    <canvas id="motif-canvas-3" width="180" height="180"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- STANDALONE CLAUSE AUDIT SUITE -->
+    <section id="deep-dive" class="py-20 px-4 md:px-8 max-w-5xl mx-auto relative z-20">
+        <div class="bg-moss/40 border border-cream/15 rounded-[2.5rem] p-8 md:p-12 shadow-2xl">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-12 h-12 rounded-2xl bg-clay/20 border border-clay/40 flex items-center justify-center text-clay">
+                    <i data-lucide="search-code" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-bold text-cream">Single Clause Deep Dive</h3>
+                    <p class="text-xs font-mono text-cream/60">Paste any confusing paragraph from a lease or contract for immediate breakdown.</p>
+                </div>
+            </div>
+
+            <textarea id="clause-input" rows="4" placeholder="Paste single clause here... (e.g., 'The Lessee shall indemnify the Lessor against any and all claims, damages, or losses arising from tenancy...')" class="w-full bg-obsidian/90 border border-cream/15 rounded-2xl p-4 text-cream text-sm font-mono focus:outline-none focus:border-clay transition-all mb-4 placeholder:text-cream/30"></textarea>
+
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-mono text-cream/40">POWERED BY GEMINI CLAUSE PARSER</span>
+                <button onclick="handleClauseAnalyze()" class="magnetic-btn px-6 py-2.5 rounded-full bg-clay hover:bg-clay-hover text-white text-xs font-bold tracking-wide shadow-lg shadow-clay/20 transition-all flex items-center gap-2">
+                    <span>Audit Clause</span>
+                    <i data-lucide="corner-down-left" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <div id="clause-result" class="hidden mt-6 p-6 bg-obsidian/95 border border-cream/10 rounded-2xl text-sm font-light text-cream/90 leading-relaxed whitespace-pre-line"></div>
+        </div>
+    </section>
+
+    <!-- DOCUMENT COMPARISON SUITE -->
+    <section id="comparer" class="py-20 px-4 md:px-8 max-w-5xl mx-auto relative z-20">
+        <div class="bg-moss/40 border border-cream/15 rounded-[2.5rem] p-8 md:p-12 shadow-2xl">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                    <i data-lucide="git-compare" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-bold text-cream">Document Comparison ("What's Changed?")</h3>
+                    <p class="text-xs font-mono text-cream/60">Upload old vs. new version of an agreement to highlight modifications, rent increases, or added liabilities.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-obsidian/70 border border-cream/15 rounded-2xl p-6 text-center">
+                    <label class="text-xs font-mono text-cream/60 block mb-3">VERSION A (OLD DOCUMENT)</label>
+                    <input type="file" id="doc-a-uploader" accept=".pdf,.docx,.doc,.png,.jpg,.jpeg" class="text-xs text-cream/80 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-cream/10 file:text-cream hover:file:bg-cream/20 cursor-pointer">
+                </div>
+                <div class="bg-obsidian/70 border border-cream/15 rounded-2xl p-6 text-center">
+                    <label class="text-xs font-mono text-cream/60 block mb-3">VERSION B (NEW DOCUMENT)</label>
+                    <input type="file" id="doc-b-uploader" accept=".pdf,.docx,.doc,.png,.jpg,.jpeg" class="text-xs text-cream/80 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-cream/10 file:text-cream hover:file:bg-cream/20 cursor-pointer">
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <button onclick="handleCompare()" class="magnetic-btn px-6 py-2.5 rounded-full bg-clay hover:bg-clay-hover text-white text-xs font-bold tracking-wide shadow-lg shadow-clay/20 transition-all flex items-center gap-2">
+                    <span>Compare Both Documents</span>
+                    <i data-lucide="arrow-right-left" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <div id="compare-result" class="hidden mt-6 p-6 bg-obsidian/95 border border-cream/10 rounded-2xl text-sm font-light text-cream/90 leading-relaxed whitespace-pre-line"></div>
+        </div>
+    </section>
+
+    <!-- F. MEMBERSHIP / GET STARTED SECTION -->
+    <section class="py-20 px-4 md:px-8 max-w-5xl mx-auto relative z-20">
+        <div class="bg-gradient-to-br from-moss via-moss/80 to-obsidian border border-clay/30 rounded-[2.5rem] p-10 md:p-16 text-center relative overflow-hidden shadow-2xl">
+            <div class="absolute -left-20 -top-20 w-60 h-60 bg-clay/15 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <span class="text-xs font-mono text-clay uppercase tracking-widest block mb-2">Instant Legal Audit Access</span>
+            <h2 class="text-3xl md:text-5xl font-extrabold text-cream mb-4">
+                Ready to Dissect Your <span class="font-serif italic font-normal text-clay">Legal Document?</span>
+            </h2>
+            <p class="text-sm md:text-base text-cream/70 font-light max-w-xl mx-auto mb-8">
+                No credit card required. Upload your lease, mortgage, or terms of service for immediate AI-powered risk radar.
+            </p>
+
+            <a href="#analyzer" class="magnetic-btn inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-clay hover:bg-clay-hover text-white text-sm font-bold font-mono tracking-wide shadow-2xl shadow-clay/30 transition-all">
+                <span>Start Free Audit Now</span>
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </a>
+        </div>
+    </section>
+
+    <!-- G. DOCUMENT VAULT & HISTORY -->
+    <section id="vault" class="py-20 px-4 md:px-8 max-w-6xl mx-auto relative z-20">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+            <div>
+                <span class="text-xs font-mono text-clay tracking-widest uppercase block mb-1">Encrypted Record History</span>
+                <h2 class="text-3xl font-extrabold text-cream">Document Vault</h2>
+            </div>
+
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <input type="text" id="search-input" placeholder="Search by tag (e.g. rental)..." class="bg-moss/60 border border-cream/15 rounded-full px-4 py-2 text-xs font-mono text-cream focus:outline-none focus:border-clay w-full md:w-64">
+                <button onclick="handleSearch()" class="magnetic-btn px-4 py-2 rounded-full bg-cream/10 hover:bg-cream/20 text-cream text-xs font-mono border border-cream/15 transition-all">
+                    Search
+                </button>
+            </div>
+        </div>
+
+        <div id="past-analyses-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="bg-moss/30 border border-cream/10 rounded-[2rem] p-6 text-center text-cream/50 text-xs font-mono col-span-full py-12">
+                No archived analyses found. Upload a document to build your vault.
+            </div>
+        </div>
+    </section>
+
+    <!-- H. FOOTER -->
+    <footer class="bg-obsidian-dark text-cream/60 py-16 border-t border-cream/10 rounded-t-[4rem] relative z-20">
+        <div class="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+            <div class="md:col-span-2">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-full bg-clay/20 border border-clay/40 flex items-center justify-center text-clay">
+                        <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                    </div>
+                    <span class="font-extrabold text-lg text-cream">
+                        Lexi<span class="text-clay font-serif italic text-xl">Guard</span>
+                    </span>
+                </div>
+                <p class="text-xs font-light text-cream/60 leading-relaxed max-w-sm mb-4">
+                    Cinematic Multilingual Legal Document Dissection Platform built for tenants, borrowers, and consumers.
+                </p>
+                <div class="flex items-center gap-2 text-[11px] font-mono text-emerald-400">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    SYSTEM OPERATIONAL • API RESPONSIVE
+                </div>
+            </div>
+
+            <div>
+                <h4 class="text-xs font-mono text-cream uppercase mb-4 tracking-wider">Capabilities</h4>
+                <ul class="space-y-2 text-xs font-light text-cream/70">
+                    <li>Rental Agreement Audit</li>
+                    <li>Loan Contract Risk Radar</li>
+                    <li>Terms of Service Parsing</li>
+                    <li>Single Clause Deep Dive</li>
+                    <li>Version Delta Engine</li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="text-xs font-mono text-cream uppercase mb-4 tracking-wider">Languages Supported</h4>
+                <ul class="space-y-2 text-xs font-mono text-cream/70">
+                    <li>English • Hinglish</li>
+                    <li>हिन्दी (Hindi)</li>
+                    <li>తెలుగు (Telugu)</li>
+                    <li>தமிழ் (Tamil)</li>
+                    <li>ગુજરાતી (Gujarati)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="max-w-6xl mx-auto px-6 pt-6 border-t border-cream/5 flex flex-col sm:flex-row items-center justify-between text-[11px] font-mono text-cream/40 gap-4">
+            <p>© 2026 LexiGuard AI. Built for demystifying legal agreements.</p>
+            <p>Disclaimer: LexiGuard provides AI-generated informational summaries, not legal advice.</p>
+        </div>
+    </footer>
+
+    <!-- Interactive Term Explainer Modal -->
+    <div id="term-modal" class="hidden fixed inset-0 bg-obsidian/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-moss border border-cream/20 rounded-[2rem] p-6 max-w-md w-full shadow-2xl relative">
+            <button onclick="closeTermModal()" class="absolute top-4 right-4 text-cream/50 hover:text-cream">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <span class="text-[10px] font-mono text-clay uppercase block mb-1">Legal Glossary Lookup</span>
+            <h3 id="term-title" class="text-xl font-bold text-cream mb-2 capitalize">Term</h3>
+            <p id="term-explanation" class="text-xs text-cream/80 font-light leading-relaxed mb-4">Fetching simple explanation...</p>
+            <button onclick="closeTermModal()" class="w-full py-2 rounded-full bg-cream/10 hover:bg-cream/20 text-cream text-xs font-mono border border-cream/15 transition-all">
+                Dismiss
+            </button>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
