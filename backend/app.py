@@ -16,8 +16,8 @@ import json
 import time
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from flask import Flask, request, jsonify, send_from_directory
+from flask_cors import CORS
 from dotenv import load_dotenv
-import google.generativeai as genai
 import pdfplumber
 try:
     import pytesseract
@@ -29,8 +29,15 @@ import io
 import docx
 
 # Firebase Admin imports
-import firebase_admin
-from firebase_admin import credentials, auth, firestore
+try:
+    import firebase_admin
+    from firebase_admin import credentials, auth, firestore
+except Exception as e:
+    print(f"Notice: Firebase Admin import fallback: {e}")
+    firebase_admin = None
+    credentials = None
+    auth = None
+    firestore = None
 
 # MongoDB Atlas Database Layer
 from db import (
@@ -81,7 +88,7 @@ init_mongo_connection()
 USE_FIREBASE = False
 db = None
 
-if os.path.exists("serviceAccountKey.json"):
+if firebase_admin and os.path.exists("serviceAccountKey.json"):
     try:
         cred = credentials.Certificate("serviceAccountKey.json")
         firebase_admin.initialize_app(cred)
@@ -91,14 +98,35 @@ if os.path.exists("serviceAccountKey.json"):
     except Exception as e:
         print(f"Warning: Firebase Admin initialization failed: {e}. Falling back to in-memory store.")
 else:
-    print("Notice: serviceAccountKey.json not found. Running in local fallback mode (in-memory store).")
+    print("Notice: serviceAccountKey.json not found or Firebase Admin disabled. Running in MongoDB / in-memory mode.")
 
 # In-memory storage fallback when persistent databases are not configured
 in_memory_docs = {}
 in_memory_shared = {}
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY", ""))
 app = Flask(__name__, static_folder='../frontend', static_url_path='')
+
+# --- CORS CONFIGURATION ---
+frontend_url_env = os.environ.get("FRONTEND_URL", "").strip()
+if frontend_url_env:
+    allowed_origins = [u.strip().rstrip("/") for u in frontend_url_env.split(",") if u.strip()]
+    # If in local debug mode, also permit local frontend origins
+    if os.environ.get("FLASK_DEBUG", "").lower() in ("true", "1", "t") or os.environ.get("FLASK_ENV") == "development":
+        for d in ["http://localhost:5000", "http://127.0.0.1:5000", "http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5500", "http://127.0.0.1:5500"]:
+            if d not in allowed_origins:
+                allowed_origins.append(d)
+else:
+    # Default local development origins
+    allowed_origins = [
+        "http://localhost:5000",
+        "http://127.0.0.1:5000",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:5500",
+        "http://127.0.0.1:5500"
+    ]
+
+CORS(app, origins=allowed_origins, supports_credentials=True)
 
 # --- HELPER FUNCTIONS ---
 def extract_text_from_file(file_stream, file_extension):
@@ -831,4 +859,6 @@ def serve_share_page():
     return send_from_directory(app.static_folder, 'share.html')
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000,use_reloader=False)
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_DEBUG', 'False').lower() in ('true', '1', 't')
+    app.run(host='0.0.0.0', port=port, debug=debug, use_reloader=False)

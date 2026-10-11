@@ -1,15 +1,33 @@
-# Secret API Keys - DO NOT UPLOAD
+# Secret API Keys and Environment Variables - DO NOT UPLOAD
+.env
+.env.*
+*.env
 backend/.env
+backend/.env.*
+!.env.example
+!backend/.env.example
+!*.env.example
+*serviceAccountKey*.json
+serviceAccountKey.json
 backend/serviceAccountKey.json
 
-# Python Virtual Environment
+# Python Virtual Environments
+venv/
+.venv/
 backend/venv/
 
-# Python cache files
+# Python cache and compiled files
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 .pytest_cache/
 
-# IDE/Editor specific files
+# Vercel deployment artifacts
+.vercel/
+
+# IDE / Editor / OS specific files
 .vscode/
 .idea/
+.DS_Store
+Thumbs.db

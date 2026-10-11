@@ -1,6 +1,7 @@
 // LexiGuard Cinematic Engine Script (Preset A - Organic Tech)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { apiUrl } from "./config.js";
 
 // Firebase Config
 const firebaseConfig = {
@@ -225,7 +226,7 @@ window.handleAnalyze = async function () {
     resultsSection.classList.add("hidden");
 
     try {
-        const response = await fetch("/analyze", {
+        const response = await fetch(apiUrl("/analyze"), {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${currentAuthToken}`
@@ -401,7 +402,7 @@ window.lookupTerm = async function (term) {
     modal.classList.remove("hidden");
 
     try {
-        const response = await fetch("/explain_term", {
+        const response = await fetch(apiUrl("/explain_term"), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ term, language })
@@ -478,7 +479,7 @@ window.handleShare = async function () {
         return;
     }
     try {
-        const response = await fetch("/create_share_link", {
+        const response = await fetch(apiUrl("/create_share_link"), {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${currentAuthToken}`,
@@ -517,7 +518,7 @@ window.handleClauseAnalyze = async function () {
     resultDiv.textContent = "Analyzing clause risk parameters...";
 
     try {
-        const response = await fetch("/analyze_clause", {
+        const response = await fetch(apiUrl("/analyze_clause"), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ clause_text: input.value.trim(), language })
@@ -574,7 +575,7 @@ window.handleCompare = async function () {
     formData.append("language", language);
 
     try {
-        const response = await fetch("/compare", {
+        const response = await fetch(apiUrl("/compare"), {
             method: "POST",
             body: formData
         });
@@ -702,7 +703,7 @@ async function loadVaultHistory() {
 
     // Fetch persistent analyses from backend (MongoDB)
     try {
-        const resp = await fetch("/api/history?limit=20");
+        const resp = await fetch(apiUrl("/api/history?limit=20"));
         if (resp.ok) {
             const data = await resp.json();
             if (data.analyses && data.analyses.length > 0) {
@@ -766,7 +767,7 @@ window.reloadVaultItem = async function (id) {
 
     if (!analysisData) {
         try {
-            const resp = await fetch(`/api/document/${id}`);
+            const resp = await fetch(apiUrl(`/api/document/${id}`));
             if (resp.ok) {
                 analysisData = await resp.json();
             }

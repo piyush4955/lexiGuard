@@ -311,3 +311,29 @@ class TestGeminiHelperFallbackAndErrors:
             assert result is None
             # Aborted after 1 attempt, did not retry
             assert mock_client.models.generate_content.call_count == 1
+
+
+class TestDeploymentAndCORS:
+    def test_health_check_endpoint(self, client):
+        """Verify /api/health returns healthy without leaking secrets."""
+        resp = client.get('/api/health')
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data['status'] == 'healthy'
+        assert 'mongodb_connected' in data
+        assert 'firebase_connected' in data
+        assert 'gemini_configured' in data
+        # Ensure no credential keys are leaked
+        assert 'GEMINI_API_KEY' not in data
+        assert 'MONGODB_URI' not in data
+
+    def test_cors_options_preflight_allowed_origin(self, client):
+        """Verify CORS preflight returns 200 and access-control headers for allowed origins."""
+        headers = {
+            'Origin': 'http://localhost:3000',
+            'Access-Control-Request-Method': 'POST',
+            'Access-Control-Request-Headers': 'Content-Type,Authorization'
+        }
+        resp = client.options('/analyze', headers=headers)
+        assert resp.status_code in (200, 204)
+        assert resp.headers.get('Access-Control-Allow-Origin') == 'http://localhost:3000'

@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { apiUrl } from "./config.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyA33tEkjkJjoZr0l-DNxwevv9phRA9GkjY",
@@ -26,7 +27,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Try Flask local endpoint first
         let data = null;
         try {
-            const resp = await fetch(`/get_shared_analysis/${shareId}`);
+            const resp = await fetch(apiUrl(`/get_shared_analysis/${shareId}`));
             if (resp.ok) {
                 data = await resp.json();
             }
