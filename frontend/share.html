@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500;1,600&family=IBM+Plex+Mono:wght@400;500&family=Outfit:wght@500;700&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     
     <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -41,6 +41,8 @@
     </script>
     
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-obsidian text-cream font-sans antialiased min-h-screen p-6 md:p-12">
@@ -87,18 +89,48 @@
                 <div class="bg-moss/40 border border-cream/10 rounded-[2.2rem] p-8">
                     <div class="flex items-center gap-3 mb-4 text-emerald-400">
                         <i data-lucide="check-circle-2" class="w-5 h-5"></i>
-                        <h3 class="text-lg font-bold text-cream">Summary & Action Checklist</h3>
+                        <h3 id="summary-heading" class="text-lg font-bold text-cream">Summary & Action Checklist</h3>
                     </div>
-                    <div id="summary-text" class="text-xs text-cream/80 font-light leading-relaxed whitespace-pre-line"></div>
+                    <div id="summary-text" class="prose prose-invert max-w-none text-xs text-cream/80 font-light leading-relaxed"></div>
                 </div>
 
                 <!-- Risk Radar -->
                 <div class="bg-moss/40 border border-clay/30 rounded-[2.2rem] p-8">
                     <div class="flex items-center gap-3 mb-4 text-clay">
                         <i data-lucide="radar" class="w-5 h-5"></i>
-                        <h3 class="text-lg font-bold text-cream">Risk Radar & Flagged Clauses</h3>
+                        <h3 id="risk-heading" class="text-lg font-bold text-cream">Risk Radar & Flagged Clauses</h3>
                     </div>
-                    <div id="risk-text" class="text-xs text-cream/80 font-light leading-relaxed whitespace-pre-line"></div>
+                    <div id="risk-text" class="prose prose-invert max-w-none text-xs text-cream/80 font-light leading-relaxed"></div>
+                </div>
+            </div>
+
+            <!-- Additional Sections -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Questions to Ask -->
+                <div class="bg-moss/30 backdrop-blur-xl border border-cream/10 rounded-[2rem] p-6">
+                    <div class="flex items-center gap-2 mb-4 text-clay">
+                        <i data-lucide="help-circle" class="w-4 h-4"></i>
+                        <h4 id="questions-heading" class="text-sm font-bold uppercase tracking-wider text-cream font-mono">Negotiation Prompts</h4>
+                    </div>
+                    <div id="questions-text" class="prose prose-invert max-w-none text-xs text-cream/70 leading-relaxed"></div>
+                </div>
+
+                <!-- Missing Clauses -->
+                <div class="bg-moss/30 backdrop-blur-xl border border-cream/10 rounded-[2rem] p-6">
+                    <div class="flex items-center gap-2 mb-4 text-amber-400">
+                        <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                        <h4 id="missing-clauses-heading" class="text-sm font-bold uppercase tracking-wider text-cream font-mono">Omitted Protections</h4>
+                    </div>
+                    <div id="missing-clauses-text" class="prose prose-invert max-w-none text-xs text-cream/70 leading-relaxed"></div>
+                </div>
+
+                <!-- Stamp Duty / Guidance -->
+                <div class="bg-moss/30 backdrop-blur-xl border border-cream/10 rounded-[2rem] p-6">
+                    <div class="flex items-center gap-2 mb-4 text-emerald-400">
+                        <i data-lucide="stamp" class="w-4 h-4"></i>
+                        <h4 id="stamp-duty-heading" class="text-sm font-bold uppercase tracking-wider text-cream font-mono">Stamp Duty & Formalities</h4>
+                    </div>
+                    <div id="stamp-duty-text" class="prose prose-invert max-w-none text-xs text-cream/70 leading-relaxed"></div>
                 </div>
             </div>
 

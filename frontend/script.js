@@ -202,6 +202,7 @@ window.handleAnalyze = async function () {
     const tagsInput = document.getElementById("tags-input");
     const loader = document.getElementById("loader");
     const resultsSection = document.getElementById("results");
+    const analyzeBtn = document.getElementById("analyze-btn");
 
     const formData = new FormData();
     let filename = "Sample_Rental_Agreement.pdf";
@@ -216,6 +217,10 @@ window.handleAnalyze = async function () {
     formData.append("filename", filename);
     formData.append("tags", tagsInput ? tagsInput.value : "rental, bangalore");
 
+    if (analyzeBtn) {
+        analyzeBtn.disabled = true;
+        analyzeBtn.classList.add("opacity-60", "cursor-not-allowed");
+    }
     loader.classList.remove("hidden");
     resultsSection.classList.add("hidden");
 
@@ -229,12 +234,23 @@ window.handleAnalyze = async function () {
         });
 
         if (!response.ok) {
-            const errData = await response.json();
-            throw new Error(errData.error || "Analysis failed.");
+            let errMsg = "Analysis failed.";
+            try {
+                const errData = await response.json();
+                errMsg = errData.error || errMsg;
+            } catch (_) {}
+            throw new Error(errMsg);
         }
 
         const data = await response.json();
+        if (!data || !data.doc_id) {
+            throw new Error("Received invalid analysis output from server.");
+        }
         currentDocId = data.doc_id;
+        const modelBadge = document.getElementById("ai-model-badge");
+        if (modelBadge && data.ai_model) {
+            modelBadge.textContent = `${data.ai_model.toUpperCase()} • DOCUMENT ANALYSIS`;
+        }
 
         renderResults(data);
         resultsSection.classList.remove("hidden");
@@ -243,9 +259,9 @@ window.handleAnalyze = async function () {
         saveToLocalVault({
             id: data.doc_id,
             filename: filename,
-            doc_type: data.key_info?.doc_type || "Rental Agreement",
-            jurisdiction: data.key_info?.detected_jurisdiction || "Bangalore, India",
-            tags: tagsInput ? tagsInput.value : "rental, bangalore",
+            doc_type: data.doc_type || "Document",
+            jurisdiction: data.detected_jurisdiction || "",
+            tags: tagsInput ? tagsInput.value : "",
             date: new Date().toLocaleDateString(),
             data: data
         });
@@ -256,6 +272,10 @@ window.handleAnalyze = async function () {
         alert("Analysis Error: " + error.message);
     } finally {
         loader.classList.add("hidden");
+        if (analyzeBtn) {
+            analyzeBtn.disabled = false;
+            analyzeBtn.classList.remove("opacity-60", "cursor-not-allowed");
+        }
     }
 };
 
@@ -268,13 +288,26 @@ function renderResults(data) {
 
     keyInfoCard.innerHTML = "";
     const keyInfo = data.key_info || {};
+    const docCategory = keyInfo.doc_category || data.doc_category || "other";
 
-    scoreDisplay.textContent = keyInfo.fairness_score ? `${keyInfo.fairness_score}/10` : "7.5/10";
-    scoreJustification.textContent = keyInfo.score_justification || "Balanced terms identified with standard indemnity scope.";
-    jurisdictionDisplay.textContent = keyInfo.detected_jurisdiction || "India";
+    // Only contracts have a fairness score; never present an invented default.
+    const rawScore = keyInfo.fairness_score;
+    if (docCategory === "contract" && typeof rawScore === "number" && Number.isFinite(rawScore) && rawScore >= 1 && rawScore <= 10) {
+        scoreDisplay.textContent = `${rawScore}/10`;
+    } else {
+        scoreDisplay.textContent = "N/A";
+    }
+
+    scoreJustification.textContent = docCategory === "contract"
+        ? (keyInfo.score_justification || "Fairness could not be assessed from the available text.")
+        : "Not applicable — this is not a legal contract.";
+
+    const jur = (data.detected_jurisdiction || keyInfo.detected_jurisdiction || "").trim();
+    jurisdictionDisplay.textContent = (jur && !["not applicable", "unknown", "not determined"].includes(jur.toLowerCase())) ? jur : "N/A";
 
     for (const [key, val] of Object.entries(keyInfo)) {
-        if (["score_justification", "readability_score", "fairness_score"].includes(key)) continue;
+        if (["score_justification", "fairness_score", "doc_category"].includes(key)) continue;
+        if (val === null || val === undefined) continue;
         const item = document.createElement("div");
         item.className = "bg-obsidian/60 border border-cream/10 rounded-xl p-3";
         const cleanKey = key.replace(/_/g, " ").toUpperCase();
@@ -291,7 +324,54 @@ function renderResults(data) {
     document.getElementById("missing-clauses-text").innerHTML = formatTextWithInteractiveTerms(data.missing_clauses);
     document.getElementById("stamp-duty-text").innerHTML = formatTextWithInteractiveTerms(data.legal_formalities_guidance);
 
+    adaptHeadingsForCategory(docCategory);
+
     if (typeof lucide !== "undefined") lucide.createIcons();
+}
+
+/**
+ * Adapts result section headings and labels based on the document category.
+ * Contracts use legal-contract terminology; academic/other docs use neutral terminology.
+ */
+function adaptHeadingsForCategory(docCategory) {
+    const summaryHeading = document.getElementById("summary-heading");
+    const summarySubheading = document.getElementById("summary-subheading");
+    const riskHeading = document.getElementById("risk-radar-heading");
+    const riskSubheading = document.getElementById("risk-radar-subheading");
+    const questionsHeading = document.getElementById("questions-heading");
+    const missingHeading = document.getElementById("missing-clauses-heading");
+    const stampHeading = document.getElementById("stamp-duty-heading");
+    const scoreLabel = document.getElementById("fairness-score-label");
+
+    if (docCategory === "contract") {
+        if (summaryHeading) summaryHeading.textContent = "Summary & Action Checklist";
+        if (summarySubheading) summarySubheading.textContent = "Contract obligations and practical next steps";
+        if (riskHeading) riskHeading.textContent = "Risk Radar & Flagged Gotchas";
+        if (riskSubheading) riskSubheading.textContent = "High risk & ambiguous terms identified";
+        if (questionsHeading) questionsHeading.textContent = "Negotiation Prompts";
+        if (missingHeading) missingHeading.textContent = "Omitted Protections";
+        if (stampHeading) stampHeading.textContent = "Stamp Duty & Formalities";
+        if (scoreLabel) scoreLabel.textContent = "Contract Fairness Score";
+    } else if (docCategory === "academic_informational") {
+        if (summaryHeading) summaryHeading.textContent = "Key Concepts & Study Checklist";
+        if (summarySubheading) summarySubheading.textContent = "Subject summary and useful study or action steps";
+        if (riskHeading) riskHeading.textContent = "Key Concepts & Caveats";
+        if (riskSubheading) riskSubheading.textContent = "Technical and academic limitations noted";
+        if (questionsHeading) questionsHeading.textContent = "Review Questions";
+        if (missingHeading) missingHeading.textContent = "Contract Clauses (Not Applicable)";
+        if (stampHeading) stampHeading.textContent = "Document Guidance";
+        if (scoreLabel) scoreLabel.textContent = "Fairness Score (Not Applicable)";
+    } else {
+        // "other"
+        if (summaryHeading) summaryHeading.textContent = "Document Summary & Next Steps";
+        if (summarySubheading) summarySubheading.textContent = "Neutral summary and relevant follow-up actions";
+        if (riskHeading) riskHeading.textContent = "Caveats & Concerns";
+        if (riskSubheading) riskSubheading.textContent = "Notable concerns for this document";
+        if (questionsHeading) questionsHeading.textContent = "Follow-up Questions";
+        if (missingHeading) missingHeading.textContent = "Contract Clauses (Not Applicable)";
+        if (stampHeading) stampHeading.textContent = "Document Guidance";
+        if (scoreLabel) scoreLabel.textContent = "Fairness Score (Not Applicable)";
+    }
 }
 
 function formatTextWithInteractiveTerms(text) {
@@ -305,11 +385,16 @@ function formatTextWithInteractiveTerms(text) {
 }
 
 // --- INTERACTIVE TERM LOOKUP MODAL ---
+let activeTermLookupToken = 0;
+
 window.lookupTerm = async function (term) {
     const modal = document.getElementById("term-modal");
     const termTitle = document.getElementById("term-title");
     const termExplanation = document.getElementById("term-explanation");
-    const language = document.getElementById("language-selector").value;
+    const languageSelector = document.getElementById("language-selector");
+    const language = languageSelector ? languageSelector.value : "English";
+
+    const currentToken = ++activeTermLookupToken;
 
     termTitle.textContent = term;
     termExplanation.textContent = "Querying Gemini legal dictionary...";
@@ -321,10 +406,27 @@ window.lookupTerm = async function (term) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ term, language })
         });
-        if (!response.ok) throw new Error("Explanation unavailable.");
+
+        if (!response.ok) {
+            let errMsg = "Explanation unavailable.";
+            try {
+                const errData = await response.json();
+                errMsg = errData.error || errMsg;
+            } catch (_) {}
+            throw new Error(errMsg);
+        }
+
         const data = await response.json();
-        termExplanation.textContent = data.explanation;
+        // Prevent stale responses from overwriting newer user clicks
+        if (currentToken !== activeTermLookupToken) return;
+
+        if (!data || !data.explanation || !data.explanation.trim()) {
+            throw new Error("Empty explanation returned.");
+        }
+
+        termExplanation.textContent = data.explanation.trim();
     } catch (e) {
+        if (currentToken !== activeTermLookupToken) return;
         termExplanation.textContent = `Legal term '${term}' refers to a binding obligation standard in agreements.`;
     }
 };
@@ -398,13 +500,19 @@ window.handleShare = async function () {
 window.handleClauseAnalyze = async function () {
     const input = document.getElementById("clause-input");
     const resultDiv = document.getElementById("clause-result");
-    const language = document.getElementById("language-selector").value;
+    const languageSelector = document.getElementById("language-selector");
+    const language = languageSelector ? languageSelector.value : "English";
+    const triggerBtn = document.querySelector("button[onclick='handleClauseAnalyze()']");
 
-    if (!input.value.trim()) {
+    if (!input || !input.value.trim()) {
         alert("Please paste a clause to analyze.");
         return;
     }
 
+    if (triggerBtn) {
+        triggerBtn.disabled = true;
+        triggerBtn.classList.add("opacity-60", "cursor-not-allowed");
+    }
     resultDiv.classList.remove("hidden");
     resultDiv.textContent = "Analyzing clause risk parameters...";
 
@@ -412,13 +520,30 @@ window.handleClauseAnalyze = async function () {
         const response = await fetch("/analyze_clause", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ clause_text: input.value, language })
+            body: JSON.stringify({ clause_text: input.value.trim(), language })
         });
-        if (!response.ok) throw new Error("Clause audit failed.");
+
+        if (!response.ok) {
+            let errMsg = "Clause audit failed.";
+            try {
+                const errData = await response.json();
+                errMsg = errData.error || errMsg;
+            } catch (_) {}
+            throw new Error(errMsg);
+        }
+
         const data = await response.json();
-        resultDiv.textContent = data.explanation;
+        if (!data || !data.explanation || !data.explanation.trim()) {
+            throw new Error("No explanation returned from analysis service.");
+        }
+        resultDiv.textContent = data.explanation.trim();
     } catch (e) {
         resultDiv.textContent = "Error: " + e.message;
+    } finally {
+        if (triggerBtn) {
+            triggerBtn.disabled = false;
+            triggerBtn.classList.remove("opacity-60", "cursor-not-allowed");
+        }
     }
 };
 
@@ -427,31 +552,54 @@ window.handleCompare = async function () {
     const docA = document.getElementById("doc-a-uploader");
     const docB = document.getElementById("doc-b-uploader");
     const resultDiv = document.getElementById("compare-result");
-    const language = document.getElementById("language-selector").value;
+    const languageSelector = document.getElementById("language-selector");
+    const language = languageSelector ? languageSelector.value : "English";
+    const triggerBtn = document.querySelector("button[onclick='handleCompare()']");
 
-    if (docA.files.length === 0 || docB.files.length === 0) {
+    if (!docA || !docB || docA.files.length === 0 || docB.files.length === 0) {
         alert("Please select both Version A (Old) and Version B (New) documents.");
         return;
     }
+
+    if (triggerBtn) {
+        triggerBtn.disabled = true;
+        triggerBtn.classList.add("opacity-60", "cursor-not-allowed");
+    }
+    resultDiv.classList.remove("hidden");
+    resultDiv.textContent = "Comparing version deltas & detecting clause modifications...";
 
     const formData = new FormData();
     formData.append("doc_a", docA.files[0]);
     formData.append("doc_b", docB.files[0]);
     formData.append("language", language);
 
-    resultDiv.classList.remove("hidden");
-    resultDiv.textContent = "Comparing version deltas & detecting clause modifications...";
-
     try {
         const response = await fetch("/compare", {
             method: "POST",
             body: formData
         });
-        if (!response.ok) throw new Error("Comparison failed.");
+
+        if (!response.ok) {
+            let errMsg = "Comparison failed.";
+            try {
+                const errData = await response.json();
+                errMsg = errData.error || errMsg;
+            } catch (_) {}
+            throw new Error(errMsg);
+        }
+
         const data = await response.json();
-        resultDiv.textContent = data.comparison;
+        if (!data || !data.comparison || !data.comparison.trim()) {
+            throw new Error("No comparison output returned from analysis service.");
+        }
+        resultDiv.textContent = data.comparison.trim();
     } catch (e) {
         resultDiv.textContent = "Error: " + e.message;
+    } finally {
+        if (triggerBtn) {
+            triggerBtn.disabled = false;
+            triggerBtn.classList.remove("opacity-60", "cursor-not-allowed");
+        }
     }
 };
 
@@ -497,10 +645,10 @@ function initTelemetryTypewriter() {
 
     const logs = [
         "> INIT_PARSER: Tokenizing PDF structure...",
-        "> DETECT_JURISDICTION: Identified 'India (Karnataka State)'",
-        "> CLAUSE_EVAL: Checking Lock-in Period (Months 1-6)...",
-        "> RISK_RADAR: Flagged Unilateral Forfeiture Clause (Severity 8.5)",
-        "> COMPLETED: Analysis ready. Fairness score generated."
+        "> CLASSIFY_DOCUMENT: Selecting an appropriate analysis category...",
+        "> ANALYZE_CONTENT: Summarizing concepts, obligations, and caveats...",
+        "> VALIDATE_OUTPUT: Checking category-specific fields and scores...",
+        "> COMPLETED: Analysis ready for review."
     ];
 
     let logIdx = 0;
@@ -545,12 +693,43 @@ function saveToLocalVault(item) {
     localStorage.setItem("lexiguard_vault", JSON.stringify(vault.slice(0, 20)));
 }
 
-function loadVaultHistory() {
+async function loadVaultHistory() {
     const vaultContainer = document.getElementById("past-analyses-list");
     if (!vaultContainer) return;
 
-    let vault = JSON.parse(localStorage.getItem("lexiguard_vault") || "[]");
-    if (vault.length === 0) {
+    let items = [];
+    let localVault = JSON.parse(localStorage.getItem("lexiguard_vault") || "[]");
+
+    // Fetch persistent analyses from backend (MongoDB)
+    try {
+        const resp = await fetch("/api/history?limit=20");
+        if (resp.ok) {
+            const data = await resp.json();
+            if (data.analyses && data.analyses.length > 0) {
+                items = data.analyses.map(a => ({
+                    id: a.doc_id,
+                    filename: a.filename || "Document",
+                    doc_type: a.doc_type || "Analysis",
+                    jurisdiction: a.jurisdiction || "N/A",
+                    tags: Array.isArray(a.tags) ? a.tags.join(", ") : (a.tags || ""),
+                    date: a.created_at ? new Date(a.created_at).toLocaleDateString() : (a.analyzedAt ? new Date(a.analyzedAt).toLocaleDateString() : new Date().toLocaleDateString()),
+                    data: a
+                }));
+            }
+        }
+    } catch (e) {
+        console.log("Could not load backend history, using local vault:", e);
+    }
+
+    // Merge any unique items from localVault that are not already present
+    const existingIds = new Set(items.map(i => i.id));
+    localVault.forEach(lv => {
+        if (!existingIds.has(lv.id)) {
+            items.push(lv);
+        }
+    });
+
+    if (items.length === 0) {
         vaultContainer.innerHTML = `
             <div class="bg-moss/30 border border-cream/10 rounded-[2rem] p-6 text-center text-cream/50 text-xs font-mono col-span-full py-12">
                 No archived analyses found. Upload a document above to populate your vault.
@@ -560,7 +739,7 @@ function loadVaultHistory() {
     }
 
     vaultContainer.innerHTML = "";
-    vault.forEach(item => {
+    items.forEach(item => {
         const div = document.createElement("div");
         div.className = "bg-moss/40 border border-cream/10 hover:border-clay/40 rounded-[2rem] p-6 transition-all duration-300 shadow-lg flex flex-col justify-between";
         div.innerHTML = `
@@ -580,13 +759,29 @@ function loadVaultHistory() {
     });
 }
 
-window.reloadVaultItem = function (id) {
-    let vault = JSON.parse(localStorage.getItem("lexiguard_vault") || "[]");
-    const item = vault.find(i => i.id === id);
-    if (item && item.data) {
-        renderResults(item.data);
+window.reloadVaultItem = async function (id) {
+    let localVault = JSON.parse(localStorage.getItem("lexiguard_vault") || "[]");
+    let item = localVault.find(i => i.id === id);
+    let analysisData = item ? item.data : null;
+
+    if (!analysisData) {
+        try {
+            const resp = await fetch(`/api/document/${id}`);
+            if (resp.ok) {
+                analysisData = await resp.json();
+            }
+        } catch (e) {
+            console.error("Failed to load document analysis from backend:", e);
+        }
+    }
+
+    if (analysisData) {
+        currentDocId = id;
+        renderResults(analysisData);
         document.getElementById("results").classList.remove("hidden");
         document.getElementById("results").scrollIntoView({ behavior: "smooth" });
+    } else {
+        alert("Could not load analysis record.");
     }
 };
 

@@ -47,8 +47,49 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (data) {
             document.getElementById('filename').textContent = data.filename || "Shared Legal Document";
             document.getElementById('doc-type').textContent = data.doc_type || "Legal Analysis";
-            document.getElementById('summary-text').textContent = data.summary_and_checklist || "Summary not available.";
-            document.getElementById('risk-text').textContent = data.risk_analysis || "Risk audit not available.";
+
+            function renderMarkdownSafely(text) {
+                if (!text) return "";
+                if (typeof marked !== 'undefined' && typeof DOMPurify !== 'undefined') {
+                    let html = marked.parse(text);
+                    return DOMPurify.sanitize(html);
+                }
+                return text;
+            }
+
+            document.getElementById('summary-text').innerHTML = renderMarkdownSafely(data.summary_and_checklist) || "Summary not available.";
+            document.getElementById('risk-text').innerHTML = renderMarkdownSafely(data.risk_analysis) || "Risk audit not available.";
+            
+            if (document.getElementById('questions-text')) document.getElementById('questions-text').innerHTML = renderMarkdownSafely(data.questions_to_ask) || "";
+            if (document.getElementById('missing-clauses-text')) document.getElementById('missing-clauses-text').innerHTML = renderMarkdownSafely(data.missing_clauses) || "";
+            if (document.getElementById('stamp-duty-text')) document.getElementById('stamp-duty-text').innerHTML = renderMarkdownSafely(data.legal_formalities_guidance) || "";
+
+            const docCategory = data.doc_category || "contract";
+            const summaryHeading = document.getElementById("summary-heading");
+            const riskHeading = document.getElementById("risk-heading");
+            const questionsHeading = document.getElementById("questions-heading");
+            const missingHeading = document.getElementById("missing-clauses-heading");
+            const stampHeading = document.getElementById("stamp-duty-heading");
+
+            if (docCategory === "contract") {
+                if (summaryHeading) summaryHeading.textContent = "Summary & Action Checklist";
+                if (riskHeading) riskHeading.textContent = "Risk Radar & Flagged Gotchas";
+                if (questionsHeading) questionsHeading.textContent = "Negotiation Prompts";
+                if (missingHeading) missingHeading.textContent = "Omitted Protections";
+                if (stampHeading) stampHeading.textContent = "Stamp Duty & Formalities";
+            } else if (docCategory === "academic_informational") {
+                if (summaryHeading) summaryHeading.textContent = "Key Concepts & Study Checklist";
+                if (riskHeading) riskHeading.textContent = "Key Concepts & Caveats";
+                if (questionsHeading) questionsHeading.textContent = "Review Questions";
+                if (missingHeading) missingHeading.textContent = "Contract Clauses (Not Applicable)";
+                if (stampHeading) stampHeading.textContent = "Document Guidance";
+            } else {
+                if (summaryHeading) summaryHeading.textContent = "Document Summary & Next Steps";
+                if (riskHeading) riskHeading.textContent = "Caveats & Concerns";
+                if (questionsHeading) questionsHeading.textContent = "Follow-up Questions";
+                if (missingHeading) missingHeading.textContent = "Contract Clauses (Not Applicable)";
+                if (stampHeading) stampHeading.textContent = "Document Guidance";
+            }
 
             loadingEl.classList.add('hidden');
             contentEl.classList.remove('hidden');

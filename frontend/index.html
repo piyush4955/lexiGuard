@@ -135,7 +135,7 @@
             </h1>
 
             <p class="text-lg md:text-xl text-cream/70 max-w-2xl font-light leading-relaxed mb-10 hero-stagger">
-                Audit rental agreements, loan contracts, and terms of service. Detect gotcha clauses, score fairness, and receive structured negotiation checklists in 6 Indian languages.
+                Analyze contracts, academic materials, technical documents, and more. Get contract-specific risk review or document-appropriate summaries and follow-up guidance in 6 Indian languages.
             </p>
 
             <!-- Cinematic Upload Zone Card (Full Width) -->
@@ -151,8 +151,8 @@
                             <i data-lucide="file-up" class="w-8 h-8"></i>
                         </div>
 
-                        <h3 class="text-2xl font-bold text-cream mb-2" id="upload-headline">Drop your legal agreement or click to browse</h3>
-                        <p class="text-sm text-cream/50 font-mono mb-4">Supports PDF, DOCX, PNG, JPG (Scanned & Digital Contracts)</p>
+                        <h3 class="text-2xl font-bold text-cream mb-2" id="upload-headline">Drop your document or click to browse</h3>
+                        <p class="text-sm text-cream/50 font-mono mb-4">Supports PDF, DOCX, PNG, JPG (Scanned & Digital Documents)</p>
 
                         <div id="selected-file-info" class="hidden inline-flex items-center gap-2 px-4 py-2 bg-clay/20 border border-clay/40 rounded-full text-xs font-mono text-cream mb-4">
                             <i data-lucide="file-text" class="w-4 h-4 text-clay"></i>
@@ -174,8 +174,8 @@
                 <!-- Live Loader Overlay -->
                 <div id="loader" class="hidden absolute inset-0 bg-obsidian/95 backdrop-blur-xl z-40 flex flex-col items-center justify-center p-6 text-center">
                     <div class="w-16 h-16 rounded-full border-4 border-clay/20 border-t-clay animate-spin mb-4"></div>
-                    <h4 class="text-lg font-bold text-cream mb-1">Dissecting Document Parameters...</h4>
-                    <p id="loader-subtext" class="text-xs font-mono text-cream/60">Running risk radar, extracting missing protections & generating scores...</p>
+                    <h4 class="text-lg font-bold text-cream mb-1">Analyzing Document...</h4>
+                    <p id="loader-subtext" class="text-xs font-mono text-cream/60">Classifying content and preparing relevant summaries, caveats & next steps...</p>
                 </div>
             </div>
         </div>
@@ -184,7 +184,7 @@
         <div class="relative z-10 max-w-6xl mx-auto w-full pt-8 flex items-center justify-between text-xs font-mono text-cream/40">
             <span class="flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                GEMINI 1.5 FLASH ACTIVE • ZERO LATENCY PIPELINE
+            <span id="ai-model-badge">GEMINI 3.5 FLASH • DOCUMENT ANALYSIS</span>
             </span>
             <div class="flex items-center gap-2 animate-bounce">
                 <span>SCROLL FOR ARTIFACTS</span>
@@ -219,15 +219,15 @@
             <div class="bg-moss/50 backdrop-blur-xl border border-cream/10 rounded-[2.2rem] p-6 shadow-xl flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between mb-4">
-                        <span class="text-xs font-mono text-cream/50 uppercase">Readability & Fairness Score</span>
+                        <span id="fairness-score-label" class="text-xs font-mono text-cream/50 uppercase">Readability & Fairness Score</span>
                         <i data-lucide="scale" class="w-5 h-5 text-clay"></i>
                     </div>
-                    <div id="fairness-score-display" class="text-5xl font-extrabold text-cream mb-2 font-mono">--/10</div>
-                    <p id="fairness-justification" class="text-xs text-cream/70 font-light leading-relaxed">Score justification will load here upon processing.</p>
+                    <div id="fairness-score-display" class="text-5xl font-extrabold text-cream mb-2 font-mono">N/A</div>
+                    <p id="fairness-justification" class="text-xs text-cream/70 font-light leading-relaxed">Score information will appear after processing.</p>
                 </div>
                 <div class="mt-6 pt-4 border-t border-cream/10 flex items-center justify-between text-xs font-mono text-cream/50">
                     <span>Jurisdiction:</span>
-                    <span id="detected-jurisdiction" class="text-clay font-bold">Unknown</span>
+                    <span id="detected-jurisdiction" class="text-clay font-bold">N/A</span>
                 </div>
             </div>
 
@@ -250,8 +250,8 @@
                         <i data-lucide="check-circle-2" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <h3 class="text-xl font-bold text-cream">Summary & Action Checklist</h3>
-                        <p class="text-xs font-mono text-cream/50">Simplified takeaway & immediate next steps</p>
+                        <h3 id="summary-heading" class="text-xl font-bold text-cream">Summary & Action Checklist</h3>
+                        <p id="summary-subheading" class="text-xs font-mono text-cream/50">Simplified takeaway & immediate next steps</p>
                     </div>
                 </div>
                 <div id="summary-text" class="prose prose-invert max-w-none text-cream/80 text-sm font-light leading-relaxed whitespace-pre-line"></div>
@@ -265,8 +265,8 @@
                         <i data-lucide="radar" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <h3 class="text-xl font-bold text-cream">Risk Radar & Flagged Gotchas</h3>
-                        <p class="text-xs font-mono text-clay">High risk & ambiguous terms identified</p>
+                        <h3 id="risk-radar-heading" class="text-xl font-bold text-cream">Risk Radar & Flagged Gotchas</h3>
+                        <p id="risk-radar-subheading" class="text-xs font-mono text-clay">High risk & ambiguous terms identified</p>
                     </div>
                 </div>
                 <div id="risk-text" class="prose prose-invert max-w-none text-cream/80 text-sm font-light leading-relaxed whitespace-pre-line"></div>
@@ -279,7 +279,7 @@
             <div class="bg-moss/30 backdrop-blur-xl border border-cream/10 rounded-[2rem] p-6">
                 <div class="flex items-center gap-2 mb-4 text-clay">
                     <i data-lucide="help-circle" class="w-4 h-4"></i>
-                    <h4 class="text-sm font-bold uppercase tracking-wider text-cream font-mono">Negotiation Prompts</h4>
+                    <h4 id="questions-heading" class="text-sm font-bold uppercase tracking-wider text-cream font-mono">Negotiation Prompts</h4>
                 </div>
                 <div id="questions-text" class="text-xs text-cream/70 leading-relaxed whitespace-pre-line"></div>
             </div>
@@ -288,7 +288,7 @@
             <div class="bg-moss/30 backdrop-blur-xl border border-cream/10 rounded-[2rem] p-6">
                 <div class="flex items-center gap-2 mb-4 text-amber-400">
                     <i data-lucide="alert-triangle" class="w-4 h-4"></i>
-                    <h4 class="text-sm font-bold uppercase tracking-wider text-cream font-mono">Omitted Protections</h4>
+                    <h4 id="missing-clauses-heading" class="text-sm font-bold uppercase tracking-wider text-cream font-mono">Omitted Protections</h4>
                 </div>
                 <div id="missing-clauses-text" class="text-xs text-cream/70 leading-relaxed whitespace-pre-line"></div>
             </div>
@@ -297,7 +297,7 @@
             <div class="bg-moss/30 backdrop-blur-xl border border-cream/10 rounded-[2rem] p-6">
                 <div class="flex items-center gap-2 mb-4 text-emerald-400">
                     <i data-lucide="stamp" class="w-4 h-4"></i>
-                    <h4 class="text-sm font-bold uppercase tracking-wider text-cream font-mono">Stamp Duty & Formalities</h4>
+                    <h4 id="stamp-duty-heading" class="text-sm font-bold uppercase tracking-wider text-cream font-mono">Stamp Duty & Formalities</h4>
                 </div>
                 <div id="stamp-duty-text" class="text-xs text-cream/70 leading-relaxed whitespace-pre-line"></div>
             </div>
@@ -322,7 +322,7 @@
                         <div class="w-2 h-2 rounded-full bg-clay animate-pulse"></div>
                     </div>
                     <h3 class="text-xl font-bold text-cream mb-1.5">Diagnostic Shuffler</h3>
-                    <p class="text-xs text-cream/60 font-light">3 overlapping cards cycling legal risk vectors with spring bounce animation.</p>
+                    <p class="text-xs text-cream/60 font-light">Illustrative rental-agreement risks; these are not findings from your upload.</p>
                 </div>
 
                 <!-- Overlapping Cards Stack Container -->
@@ -342,20 +342,20 @@
                         </span>
                     </div>
                     <h3 class="text-xl font-bold text-cream mb-1.5">Telemetry Feed</h3>
-                    <p class="text-xs text-cream/60 font-light">Monospace real-time AI parsing stream character-by-character output.</p>
+                    <p class="text-xs text-cream/60 font-light">Illustrative classification and document-analysis sequence.</p>
                 </div>
 
                 <!-- Typewriter Monospace Display -->
                 <div class="bg-obsidian/90 border border-cream/10 rounded-2xl p-4 font-mono text-xs text-cream/80 h-44 overflow-hidden relative shadow-inner">
                     <div class="text-[10px] text-cream/30 mb-2 border-b border-cream/10 pb-1 flex justify-between">
                         <span>SYS.PARSE.LOG</span>
-                        <span>LATENCY 12ms</span>
+                        <span>SAMPLE LOG</span>
                     </div>
                     <div id="typewriter-content" class="leading-relaxed text-emerald-300/90 whitespace-pre-line"></div>
                     <span class="inline-block w-2 h-4 bg-clay animate-pulse ml-0.5 align-middle"></span>
                 </div>
 
-                <div class="text-[10px] font-mono text-cream/40 text-center">AI STREAM PARSER ACTIVE</div>
+                <div class="text-[10px] font-mono text-cream/40 text-center">ILLUSTRATIVE ANALYSIS FLOW</div>
             </div>
 
             <!-- Card 3 — Cursor Protocol Scheduler -->

@@ -8,6 +8,7 @@ backend/venv/
 # Python cache files
 __pycache__/
 *.pyc
+.pytest_cache/
 
 # IDE/Editor specific files
 .vscode/
