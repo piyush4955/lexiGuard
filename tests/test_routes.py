@@ -337,3 +337,31 @@ class TestDeploymentAndCORS:
         resp = client.options('/analyze', headers=headers)
         assert resp.status_code in (200, 204)
         assert resp.headers.get('Access-Control-Allow-Origin') == 'http://localhost:3000'
+
+    def test_cors_options_preflight_production_vercel_origin(self, client):
+        """Verify preflight specifically allows the deployed Vercel frontend origin with expected headers."""
+        headers = {
+            'Origin': 'https://lexiguard-frontend-eta.vercel.app',
+            'Access-Control-Request-Method': 'POST',
+            'Access-Control-Request-Headers': 'authorization,content-type'
+        }
+        resp = client.options('/analyze', headers=headers)
+        assert resp.status_code in (200, 204)
+        assert resp.headers.get('Access-Control-Allow-Origin') == 'https://lexiguard-frontend-eta.vercel.app'
+        assert resp.headers.get('Access-Control-Allow-Credentials') == 'true'
+        assert 'POST' in resp.headers.get('Access-Control-Allow-Methods', '')
+        allow_headers = resp.headers.get('Access-Control-Allow-Headers', '').lower()
+        assert 'authorization' in allow_headers
+        assert 'content-type' in allow_headers
+
+    def test_cors_disallows_unauthorized_origin(self, client):
+        """Verify disallowed origins do not receive Access-Control-Allow-Origin headers."""
+        headers = {
+            'Origin': 'https://unauthorized-attacker-site.com',
+            'Access-Control-Request-Method': 'POST',
+            'Access-Control-Request-Headers': 'authorization,content-type'
+        }
+        resp = client.options('/analyze', headers=headers)
+        assert resp.status_code == 200
+        assert 'Access-Control-Allow-Origin' not in resp.headers
+

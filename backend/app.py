@@ -107,26 +107,40 @@ in_memory_shared = {}
 app = Flask(__name__, static_folder='../frontend', static_url_path='')
 
 # --- CORS CONFIGURATION ---
-frontend_url_env = os.environ.get("FRONTEND_URL", "").strip()
-if frontend_url_env:
-    allowed_origins = [u.strip().rstrip("/") for u in frontend_url_env.split(",") if u.strip()]
-    # If in local debug mode, also permit local frontend origins
-    if os.environ.get("FLASK_DEBUG", "").lower() in ("true", "1", "t") or os.environ.get("FLASK_ENV") == "development":
-        for d in ["http://localhost:5000", "http://127.0.0.1:5000", "http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5500", "http://127.0.0.1:5500"]:
-            if d not in allowed_origins:
-                allowed_origins.append(d)
-else:
-    # Default local development origins
-    allowed_origins = [
-        "http://localhost:5000",
-        "http://127.0.0.1:5000",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://localhost:5500",
-        "http://127.0.0.1:5500"
-    ]
+KNOWN_FRONTEND_ORIGINS = [
+    "https://lexiguard-frontend-eta.vercel.app",
+]
 
-CORS(app, origins=allowed_origins, supports_credentials=True)
+LOCAL_DEV_ORIGINS = [
+    "http://localhost:5000",
+    "http://127.0.0.1:5000",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500"
+]
+
+frontend_url_env = os.environ.get("FRONTEND_URL", "").strip()
+allowed_origins_set = set(KNOWN_FRONTEND_ORIGINS)
+
+if frontend_url_env:
+    for u in frontend_url_env.split(","):
+        cleaned = u.strip().rstrip("/")
+        if cleaned:
+            allowed_origins_set.add(cleaned)
+
+# Always allow local dev origins so local development remains seamless
+allowed_origins_set.update(LOCAL_DEV_ORIGINS)
+
+allowed_origins = list(allowed_origins_set)
+
+CORS(
+    app,
+    origins=allowed_origins,
+    methods=["GET", "POST", "OPTIONS", "HEAD", "PUT", "DELETE"],
+    allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
+    supports_credentials=True
+)
 
 # --- HELPER FUNCTIONS ---
 def extract_text_from_file(file_stream, file_extension):
