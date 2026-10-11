@@ -5,7 +5,7 @@
 // window.LEXIGUARD_API_BASE_URL before scripts execute.
 // Example: window.LEXIGUARD_API_BASE_URL = "https://lexiguard-backend.onrender.com";
 
-const PRODUCTION_API_URL = "";
+const PRODUCTION_API_URL = "https://lexiguard-production.up.railway.app/";
 
 export function getApiBaseUrl() {
     if (typeof window !== "undefined" && window.LEXIGUARD_API_BASE_URL && window.LEXIGUARD_API_BASE_URL.trim() !== "") {
